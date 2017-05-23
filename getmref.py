@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 ##################################################################################
 #
-#  getmref.py - gets the references links to MathSciNet throught the BatchMRef:
-#                                 http://www.ams.org/batchref?qdata=xmldocument
+#  getmref.py - gets the references links to MathSciNet through the BatchMRef:
+#                                 https://mathscinet.ams.org/batchmref?qdata=xmldocument
 #
 #  Copyright (C) 2017 Sigitas Tolusis, VTeX Ltd., Jim Pitman, Dept. Statistics,
 #  U.C. Berkeley and Lolita Tolene, VTeX Ltd.
@@ -46,7 +46,7 @@
 #
 ##################################################################################
 
-__version__ = "GetMRef, v2.3.1"
+__version__ = "GetMRef, v2.4"
 
 import sys
 import os
@@ -54,6 +54,7 @@ import re
 import string
 import urllib
 import urllib2
+import ssl
 import shutil
 import logging
 from time import time, sleep
@@ -797,7 +798,7 @@ class QueryHandler(RefTypes):
     LATIN1 = 'latin1'
     ASCII = "ascii"
 
-    AMS_URL = 'http://www.ams.org/batchmref'
+    AMS_URL = 'https://mathscinet.ams.org/batchmref'
 
     # AMS BatchMRef limit of items no per query
     QUERY_ITEMS_LIMIT = 100
@@ -1009,7 +1010,8 @@ class QueryHandler(RefTypes):
             flog.debug("SENDING query ...")
             req = urllib2.Request(url=self.address, data=queryval)
             flog.debug(">> Query POST data: %s" % req.get_data())
-            batchmref = urllib2.urlopen(req)
+            context = ssl._create_unverified_context()
+            batchmref = urllib2.urlopen(req, context=context)
             self.qcode = batchmref.getcode()
             flog.debug(">> Query result code: %s" % self.qcode)
             self.qresult = batchmref.read()
