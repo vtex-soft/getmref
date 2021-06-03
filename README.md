@@ -16,6 +16,8 @@ Requests to the database are sent through AMS BatchMref tool[^3].
 
 ## Usage
 
+In order to use this tool one has to download the package from the links above.
+
 To run GetMRef:
 ```bash
 getmref.exe <input_file>
@@ -187,6 +189,10 @@ containing references in the requested format:
   Additionally user may use `--bibstyle=<BibTeX style>` option (default is `plain`),
   which will be inserted into generated *.aux file as `\bibstyle{<BibTeX style>}`.
   For more information please consult the BibTeX documentation.
+
+## Bug reports
+
+Please submit bug report or feature requests at [github](https://github.com/vtex-soft/getmref/issues) page.
 
 ---
 Maintainer: L. Tolene <lolita.tolene@vtex.lt> at VTeX <http://vtex.lt>
