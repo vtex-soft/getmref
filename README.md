@@ -1,4 +1,15 @@
-# About GetMRef
+# GetMRef
+
+## Table of Contents
+
+* [About](#about)
+* [Usage](#usage)
+* [Input data](#input-data)
+* [Requesting the AMS MR database](#requesting-the-ams-mr-database)
+* [Output data](#output-data)
+* [Bug reports](#bug-reports)
+
+## About
 
 GetMRef adds an MR number[^1] for each given bibliography reference that has been
 found in the American Mathematical Society Mathematical Reviews (AMS MR) database[^2].
@@ -10,9 +21,9 @@ Also GetMRef can be used as a reference formatting tool
 
 Requests to the database are sent through AMS BatchMref tool[^3].
 
-[^1]: http://www.ams.org/mathscinet/help/getitem.html#findmr
-[^2]: http://www.ams.org/mr-database
-[^3]: http://www.ams.org/batchmref
+[^1]: [https://mathscinet.ams.org/mathscinet/help/getitem.html#findmr](https://mathscinet.ams.org/mathscinet/help/getitem.html#findmr)
+[^2]: [https://www.ams.org/publications/math-reviews/math-reviews](https://www.ams.org/publications/math-reviews/math-reviews)
+[^3]: [https://mathscinet.ams.org/batchmref](https://mathscinet.ams.org/batchmref)
 
 ## Usage
 
@@ -35,7 +46,7 @@ In case one wants to run Python script directly, Python 2.7 or newer is required
 For an option `--enc=auto` the Universal Encoding Detector library[^4],
 written by Mark Pilgrim and maintained by Dan Blanchard, is required.
 
-[^4]: https://pypi.python.org/pypi/chardet
+[^4]: [https://pypi.python.org/pypi/chardet](https://pypi.python.org/pypi/chardet)
 
 ## Input data
 
@@ -195,4 +206,3 @@ containing references in the requested format:
 Please submit bug report or feature requests at [github](https://github.com/vtex-soft/getmref/issues) page.
 
 ---
-Maintainer: L. Tolene <lolita.tolene@vtex.lt> at VTeX <http://vtex.lt>

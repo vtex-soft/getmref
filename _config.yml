@@ -1,4 +1,4 @@
 title: GetMRef
-description: Use GetMRef in order to tet the references links to MathSciNet from BatchMRef
+description: GetMRef is used for getting the references links to MathSciNet from BatchMref
 show_downloads: true
 theme: jekyll-theme-tactile
