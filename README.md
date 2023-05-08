@@ -19,15 +19,15 @@ Therefore, one can check if user provided references contain full and correct da
 Also GetMRef can be used as a reference formatting tool
 (user citation keys from original references will be inserted).
 
-Requests to the database are sent through AMS BatchMref tool[^3].
+GetMRef sends requests to the database through AMS BatchMref tool[^3].  
+One can send requests directly using AMS MRef tool with graphical interface[^4].
 
-[^1]: [https://mathscinet.ams.org/mathscinet/help/getitem.html#findmr](https://mathscinet.ams.org/mathscinet/help/getitem.html#findmr)
-[^2]: [https://www.ams.org/publications/math-reviews/math-reviews](https://www.ams.org/publications/math-reviews/math-reviews)
-[^3]: [https://mathscinet.ams.org/batchmref](https://mathscinet.ams.org/batchmref)
+[^1]: <https://mathscinet.ams.org/mathscinet/help/getitem.html#findmr>
+[^2]: <https://mathscinet.ams.org/mathscinet/index.html>
+[^3]: <https://mathscinet.ams.org/batchmref>
+[^4]: <https://mathscinet.ams.org/mathscinet-mref>
 
 ## Usage
-
-In order to use this tool one has to download the package from the links above.
 
 To run GetMRef:
 ```bash
@@ -41,22 +41,22 @@ getmref.exe --help
 
 ### Python script requirements
 
-In case one wants to run Python script directly, Python 2.7 or newer is required.
+In case one wants to run Python script directly, Python 3.9 or newer is required.
 
-For an option `--enc=auto` the Universal Encoding Detector library[^4],
+For an option `--enc=auto` the Universal Encoding Detector library[^5],
 written by Mark Pilgrim and maintained by Dan Blanchard, is required.
 
-[^4]: [https://pypi.python.org/pypi/chardet](https://pypi.python.org/pypi/chardet)
+[^5]: <https://pypi.python.org/pypi/chardet>
 
 ## Input data
 
+Input has to be a file containing bibliography references without MR number.
+References with MR number already present will be skipped.  
 
-Input has to be a file containing bibliography references.
-Only the following formats are recognized:
-
+Only the following reference formats are recognized:  
 * Basic LaTeX `\bibitem[<optional info>]{<cite_key>} <reference text>`, e.g.,
 
-```latex
+```tex
 \begin{thebibliography}{9}
 
 \bibitem{lamport94}
@@ -69,9 +69,9 @@ Only the following formats are recognized:
 \end{thebibliography}
 ```
 
-* BibTeX `@<reference_type>{<cite_key>, <key_n>=<value_n>}`, e.g.,
+* [BibTeX](https://ctan.org/pkg/bibtex) `@<reference_type>{<cite_key>, <key_n>=<value_n>}`, e.g.,  
 
-```latex
+```tex
 @article{greenwade93,
     author  = {"George D. Greenwade"},
     title   = {"The {C}omprehensive {T}ex {A}rchive {N}etwork ({CTAN})"},
@@ -83,9 +83,9 @@ Only the following formats are recognized:
     }
 ```
 
-* AMSRefs `\bib{<cite_key>}{<reference_type>}{<key_n>=<value_n>}`, e.g.,
+* [AMSRefs](https://ctan.org/pkg/amsrefs) `\bib{<cite_key>}{<reference_type>}{<key_n>=<value_n>}`, e.g.,
 
-```latex
+```tex
 \begin{bibdiv}
 \begin{biblist}
 
@@ -114,14 +114,14 @@ or an environment hasn't been found at all, all references found in the file
 will be processed. The first step may be skipped using the `--nobibenv` option.
 
 User may provide an appropriate encoding for the input file reading with an
-option `--enc=<encoding>`. By default it is set to `latin1`. In order to
+option `--enc=<encoding>`. By default, it is set to `latin1`. In order to 
 automatically determine the encoding, this option can be set to `auto`.
-For this to work the Universal Encoding Detector library[^4], written by
+For this to work the Universal Encoding Detector library[^5], written by 
 Mark Pilgrim and maintained by Dan Blanchard, is required.
 
 ## Requesting the AMS MR database
 
-User provided references are sent to http://www.ams.org/batchmref as XML string:
+User provided references are sent to <https://mathscinet.ams.org/batchmref> as XML string:
 ```xml
 <?xml version = "1.0" encoding = "UTF-8"?>
 <mref_batch>
@@ -139,6 +139,7 @@ User provided references are sent to http://www.ams.org/batchmref as XML string:
 One request to the AMS MR database can contain up to 100 references
 (`mref_item` elements). User may use an option `--itemno=<integer>` (default is
 set to 100) to (only) *decrease* this limit.
+This value *does not limit* how many references can be in the input file.
 
 The result of the request is the same XML string with the `mrid`,
 `outref` and `matches` fields appended for each `mref_item`:
@@ -166,9 +167,9 @@ The result of the request is the same XML string with the `mrid`,
 While testing GetMRef, it has been noticed that in order to get correct results,
 there is a need for a short pause after each query to the AMS MR database.
 Otherwise many references that exist in the database will be returned as not
-found. Also, there is a possibility that fields with a new information will
+found. Also, there is a possibility that fields with new information will 
 be appended to a different `mref_item`.
-According to http://www.ams.org/robots.txt there is a "Crawl-Delay: 10".
+According to <http://www.ams.org/robots.txt> there is a "Crawl-Delay: 10". 
 Tests have confirmed that 10s delay between requests to the AMD MR database is
 an optimal choice and it is the default setting. In order to change the delay time,
 one can use an option `--wait=<integer>`.
