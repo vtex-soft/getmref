@@ -46,7 +46,7 @@ In case one wants to run Python script directly, Python 3.9 or newer is required
 For an option `--enc=auto` the Universal Encoding Detector library[^5],
 written by Mark Pilgrim and maintained by Dan Blanchard, is required.
 
-[^5]: https://pypi.python.org/pypi/chardet
+[^5]: <https://pypi.python.org/pypi/chardet>
 
 ## Input data
 
@@ -206,3 +206,4 @@ containing references in the requested format:
 
 Please submit bug report or feature requests at [github](https://github.com/vtex-soft/getmref/issues) page.
 
+---
