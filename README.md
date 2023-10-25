@@ -29,7 +29,7 @@ One can send requests directly using AMS MRef tool with graphical interface[^4].
 
 ## Usage
 
-To run GetMRef:
+To run GetMRef on Windows OS:
 ```bash
 getmref.exe <input_file>
 ```
@@ -39,14 +39,26 @@ To see all options with short description:
 getmref.exe --help
 ```
 
+On Linux or Mac OS run the included Python script:
+```bash
+python3 getmref.py <input file>
+```
+or 
+```bash
+python3 getmref.py --help
+```
+(please see [Python script requirements](#python-script-requirements) section below).
+
 ### Python script requirements
 
-In case one wants to run Python script directly, Python 3.9 or newer is required.
+Python script can be run directly, for that Python 3.9 or newer is required[^5].
 
-For an option `--enc=auto` the Universal Encoding Detector library[^5],
+For an option `--enc=auto` the Universal Encoding Detector library[^6],
 written by Mark Pilgrim and maintained by Dan Blanchard, is required.
 
-[^5]: <https://pypi.python.org/pypi/chardet>
+[^5]: <https://docs.python.org/3.9/using/index.html>
+[^6]: <https://pypi.python.org/pypi/chardet>
+
 
 ## Input data
 
