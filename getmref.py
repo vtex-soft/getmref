@@ -53,7 +53,7 @@ from module.handle_bbl import PLAIN, HandleBBL
 
 __author__ = "Sigitas Tolušis, Jim Pitman, Lolita Tolenė"
 __title__ = APP_NAME
-__version__ = "3.2"
+__version__ = "3.2.1"
 __email__ = "lolita.tolene@vtex.lt"
 __status__ = "Production"
 

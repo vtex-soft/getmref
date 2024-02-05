@@ -252,11 +252,12 @@ class HandleBBL(object):
                 Otherwise current line is returned
         """
 
-        def sort_comments_out(comment_lines):
+        def sort_comments_out(orig_lines, comment_lines):
             """ Assign gathered comment lines to the rightful reference item.
 
                 Parameters
                 ----------
+                orig_lines: list
                 comment_lines : list
 
                 Returns
@@ -266,32 +267,26 @@ class HandleBBL(object):
                 list
                     Comment lines, belonging to the next reference item
             """
-
-            next_elem_comments = []
-            reversed_comments = comment_lines[::-1]
-            reversed_comments_backup = comment_lines[::-1]
-            advanced_by = 0
-            negative_index_after_last_empty_line = 0
-            empty_lines_nos = [no for no, line in enumerate(element.orig_lines)
-                               if not line.strip()]
-            if empty_lines_nos:
-                last_empty_line_no = max(empty_lines_nos)
-                negative_index_after_last_empty_line \
-                    = last_empty_line_no + 1 - len(element.orig_lines)
-            for no, cline in enumerate(reversed_comments):
-                if len(element.orig_lines) < (no + 1 + advanced_by):
+            next_elem_comment_lines = []
+            next_elem_orig_lines = []
+            reversed_orig_lines = orig_lines[::-1].copy()
+            found = False
+            skip = 0
+            for no, line in enumerate(reversed_orig_lines.copy()):
+                if not found and not line.strip():
+                    skip = no+1
+                    continue
+                elif line.strip() and line in comment_lines:
+                    found = True
+                    next_elem_comment_lines.append(comment_lines.pop(-1))
+                    for _ in range(0, skip, 1):
+                        next_elem_orig_lines.append(orig_lines.pop(-1))
+                    skip = 0
+                    next_elem_orig_lines.append(orig_lines.pop(-1))
+                else:
                     break
-                while not element.orig_lines[-(no + 1 + advanced_by)].strip():
-                    # skipping empty lines
-                    advanced_by += 1
-                negative_index = -(no + 1 + advanced_by)
-                if (negative_index == negative_index_after_last_empty_line < 0
-                    or negative_index_after_last_empty_line == 0)  \
-                        and cline == element.orig_lines[negative_index]:
-                    reversed_comments_backup.pop(0)
-                    next_elem_comments.append(reversed_comments[no])
-            current_elem_comments = reversed_comments_backup[::-1]
-            return current_elem_comments, next_elem_comments
+            return orig_lines, comment_lines, \
+                next_elem_orig_lines[::-1], next_elem_comment_lines[::-1]
 
         # Allowing gathering the references according to
         # the bibliography environment status
@@ -321,11 +316,13 @@ class HandleBBL(object):
             if require_env and reftype == RefTypes.BiblEnv.ENV:
                 if element.reftype is not None:
                     # Full bibliography item
-                    element.comment_lines, next_elem_comments = \
-                        sort_comments_out(element.comment_lines)
+                    element.orig_lines, element.comment_lines, \
+                        next_elem_orig_lines, next_elem_comment_lines = \
+                        sort_comments_out(element.orig_lines, element.comment_lines)
                     yield element.reftype, element
                     element = RefElement()
-                    element.comment_lines = next_elem_comments
+                    element.orig_lines = next_elem_orig_lines
+                    element.comment_lines = next_elem_comment_lines
 
                 # Bibliography environment
                 envstatus = additional_info.pop("envstatus", None)
@@ -342,11 +339,13 @@ class HandleBBL(object):
 
                 if element.reftype is not None:
                     # Full bibliography item
-                    element.comment_lines, next_elem_comments = \
-                        sort_comments_out(element.comment_lines)
+                    element.orig_lines, element.comment_lines, \
+                        next_elem_orig_lines, next_elem_comment_lines = \
+                        sort_comments_out(element.orig_lines, element.comment_lines)
                     yield element.reftype, element
                     element = RefElement()
-                    element.comment_lines = next_elem_comments
+                    element.orig_lines = next_elem_orig_lines
+                    element.comment_lines = next_elem_comment_lines
 
                 if gather:
                     element.reftype = reftype
@@ -382,14 +381,20 @@ class HandleBBL(object):
                 element.query_lines.append(accent_free_line)
             else:
                 # Before and after the bibliography environment
-                yield envstatus, line
+                outside_lines = line
+                if envstatus == RefTypes.BiblEnv.ENV:
+                    outside_lines += "".join(element.orig_lines)
+                    element = RefElement()
+                yield envstatus, outside_lines
 
+        final_orig_lines = []
         if element.reftype is not None:
             # The last full bibliography item
-            element.comment_lines, _ = sort_comments_out(element.comment_lines)
+            element.orig_lines, element.comment_lines, final_orig_lines, _ = \
+                sort_comments_out(element.orig_lines, element.comment_lines)
             yield element.reftype, element
 
-        yield EOF, None
+        yield EOF, "".join(final_orig_lines)
 
     def transfer_to_file(self):
         """ After each query to BatchMRef write gathered data into files.
@@ -488,13 +493,13 @@ class HandleBBL(object):
         for reftype, record in records:
             if reftype == EOF:
                 self.eof = True
+                self.ifile_end_lines.append(record)
 
             elif reftype not in RefTypes.ITYPES:
                 if reftype != RefTypes.BiblEnv.END:
                     self.data_container[Ext.OUT] += record
                 else:
                     self.ifile_end_lines.append(record)
-                continue
 
             elif valid == 0 or valid % self.query_items_limit != 0:
                 self.stdt.TOTAL += 1
@@ -542,8 +547,7 @@ class HandleBBL(object):
             self.data_container[Ext.OUT] = ""
             return self.get_mr_codes(require_env=False)
 
-        if self.ifile_end_lines:
-            self.transfer_to_file()
+        self.transfer_to_file()
 
         flog.debug("=" * 70)
 
