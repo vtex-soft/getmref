@@ -54,6 +54,10 @@ OUTPUT_ENV_FMT = {
 }
 
 
+class NoRefsFoundError(BaseException):
+    """ Error for identifying external DB malfunction. """
+
+
 class HandleBBL(object):
     """ This is the main class containing and initiating other classes'
         methods and attributes for provided input data processing.
@@ -263,7 +267,11 @@ class HandleBBL(object):
                 Returns
                 -------
                 list
+                    Orig lines, belonging to current reference item
+                list
                     Comment lines, belonging to current reference item
+                list
+                    Orig lines, belonging to the next reference item
                 list
                     Comment lines, belonging to the next reference item
             """
@@ -551,13 +559,14 @@ class HandleBBL(object):
 
         flog.debug("=" * 70)
 
-    def run(self, require_env):
+    def run(self, require_env, overwrite=True):
         """ Main method. Analyzes provided input file
             and creates required output files.
 
             Parameters
             ----------
             require_env : bool
+            overwrite: bool
         """
 
         slog.info(f"# {self.version} #\nJob started")
@@ -575,8 +584,13 @@ class HandleBBL(object):
               f"skipped: {self.stdt.SKIP}"
         fmsg = f"   {msg.lower()}, time: {duration}s"
         flog.info(fmsg)
+        need_test_db = False
         if self.stdt.ERROR:
             flog.error(fmsg)
+        elif not self.disable_queries and self.stdt.TOTAL > 0 \
+                and self.stdt.SKIP != self.stdt.TOTAL \
+                and self.stdt.SUCCESS == 0:
+            need_test_db = True
 
         slog.info("Job ended")
         slog.info(msg)
@@ -589,4 +603,7 @@ class HandleBBL(object):
                           encoding=self.fh.encoding) as out:
                     out.write(content)
 
-        self.fh.finalize_files()
+        if overwrite:
+            self.fh.finalize_files()
+        if need_test_db:
+            raise NoRefsFoundError()

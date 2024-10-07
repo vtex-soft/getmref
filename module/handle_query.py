@@ -238,6 +238,8 @@ class QueryHandler(object):
         flog.debug("SENDING query ...")
 
         queryinfo = {'qdata': querystring}
+        headers = {'user-agent': APP_NAME}
+        flog.debug(f">> Query POST headers: {headers}")
         flog.debug(f">> Query POST raw data: {queryinfo}")
         flog.debug(f">> Query POST encoded data: "
                    f"{urllib.parse.urlencode(queryinfo)}")
@@ -247,7 +249,7 @@ class QueryHandler(object):
             return
 
         try:
-            req = requests.post(url=self.address, data=queryinfo)
+            req = requests.post(url=self.address, data=queryinfo, headers=headers)
         except:
             msg = ">> Query FAILED!"
             flog.exception(msg)

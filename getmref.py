@@ -44,16 +44,20 @@ Changes:
 """
 
 import os
+import sys
 import logging
 import argparse
 
 from module.constants import Enc, Ext, RefTypes, APP_NAME
-from module.handle_logging import setup_logging_files
-from module.handle_bbl import PLAIN, HandleBBL
+from module.handle_logging import setup_logging, \
+    setup_info_logging_file, setup_error_logging_file
+from module.handle_bbl import PLAIN, HandleBBL, NoRefsFoundError
+from module.user_messages import USER_WARNING_DB_MALFUNCTION, \
+    USER_WARNING_DB_MALFUNCTION_DEBUG
 
 __author__ = "Sigitas Tolušis, Jim Pitman, Lolita Tolenė"
 __title__ = APP_NAME
-__version__ = "3.2.1"
+__version__ = "3.3.2"
 __email__ = "lolita.tolene@vtex.lt"
 __status__ = "Production"
 
@@ -68,6 +72,17 @@ DESCRIPTION = (
         "(2) formatting the given references in one of AMS allowed formats. "
         f"Maintainer: L. Tolene {__email__}."
     )
+
+if getattr(sys, 'frozen', False):
+    # https://stackoverflow.com/questions/404744/determining-application-path-in-a-python-exe-generated-by-pyinstaller
+    # For a one-folder bundle, this is the path to that folder,
+    # wherever the user may have put it. For a one-file bundle,
+    # this is the path to the _MEIxxxxxx temporary folder created by the bootloader
+    application_path = os.path.dirname(sys.executable)
+else:
+    application_path = os.path.dirname(os.path.abspath(__file__))
+TEST_DB_FILE = os.path.join(application_path,
+                            "db_test_sample", "test.bbl")
 
 
 def get_cmd_args():
@@ -116,6 +131,13 @@ def get_cmd_args():
         help="Time (in seconds) to wait between queries to AMS batchmref."
     )
     parser.add_argument(
+        "--test_db_file", default=TEST_DB_FILE, type=str,
+        help="Path to file which contains references that should "
+             "always be found at MathSciNet database and "
+             "could be used to make sure that this database "
+             "is working properly."
+    )
+    parser.add_argument(
         "--disable_queries", action='store_true',
         help="For testing purposes only. No queries to DB will be sent. "
              "Useful because they can return unstable results.")
@@ -134,31 +156,59 @@ def get_cmd_args():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
-    import sys
-    from module.constants import SLOGGER_NAME, FLOGGER_NAME
-
-    # Logging to console
-    slog = logging.getLogger(SLOGGER_NAME)
-    # Logging to files
-    flog = logging.getLogger(FLOGGER_NAME)
-
-    # Get input parameter values
-    args = get_cmd_args()
-    # Setup logging files
-    setup_logging_files(debug=args.debug if not args.disable_queries else 1,
-                        basename=os.path.splitext(args.filepath)[0])
+def run(args, test_db=False):
+    filepath = args.filepath if not test_db else args.test_db_file
+    # Setup info logging file
+    ofh = setup_info_logging_file(debug=args.debug if not args.disable_queries else 1,
+                                  basename=os.path.splitext(filepath)[0])
     # Create HandleBBL() instance
-    bblobj = HandleBBL(inputfile=args.filepath, encoding=args.enc,
-                       clean_comments=args.clean,
+    bblobj = HandleBBL(inputfile=filepath,
+                       encoding=args.enc, clean_comments=args.clean,
                        itemno=args.itemno, wait=args.wait,
                        outputtype=args.format, bibstyle=args.bibstyle,
                        disable_queries=args.disable_queries,
                        debug=args.debug, version=VERSION)
     # Process input file
     try:
-        bblobj.run(require_env=not args.nobibenv)
+        bblobj.run(require_env=not args.nobibenv, overwrite=not test_db)
+        if test_db and os.path.exists(args.test_db_file):
+            slog.info(f"{'^'*64}\n"
+                      "MathSciNet DB functions normally")
+    except NoRefsFoundError:
+        if os.path.exists(args.test_db_file):
+            if test_db:
+                # MathSciNet DB does not work or need to repeat queries after some timeout
+                debug_msg = USER_WARNING_DB_MALFUNCTION_DEBUG.format(args.filepath, args.test_db_file)
+                flog.warning(USER_WARNING_DB_MALFUNCTION)
+                flog.debug(debug_msg)
+                slog.warning(f"{'^'*64}\n" + USER_WARNING_DB_MALFUNCTION)
+                sys.exit(1)
+            else:
+                # Check if MathSciNet DB works
+                slog.info("No references were found in MathSciNet DB. "
+                          f"Initiating its checkup on file\n{args.test_db_file}\n"
+                          f"{'^'*64}")
+                ofh.close()
+                flog.removeHandler(ofh)
+                run(args, test_db=True)
     except BaseException as error:
         flog.error(f"Program failed:\n{str(error)}")
         flog.info(f"Program failed! See *.{APP_NAME.lower()}.{Ext.ERR} file")
         sys.exit(1)
+
+
+if __name__ == '__main__':
+    import sys
+    from module.constants import SLOGGER_NAME, FLOGGER_NAME
+
+    # Logging to console
+    slog = logging.getLogger(SLOGGER_NAME)
+    setup_logging()
+
+    # Logging to files
+    flog = logging.getLogger(FLOGGER_NAME)
+
+    # Get input parameter values
+    args = get_cmd_args()
+    setup_error_logging_file(basename=os.path.splitext(args.filepath)[0])
+    run(args)

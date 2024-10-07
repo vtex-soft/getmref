@@ -31,8 +31,27 @@ slog = logging.getLogger(SLOGGER_NAME)
 flog = logging.getLogger(FLOGGER_NAME)
 
 
-def setup_logging_files(debug, basename):
-    """ Setup logging files.
+def setup_logging():
+    """ Setup logging to console.
+    """
+
+    # Logging to console
+    osh = logging.StreamHandler(stream=sys.stdout)
+    osh.setFormatter(BASICFORMATTER)
+    osh.setLevel(logging.INFO)
+    osh.addFilter(LessThanFilter(logging.INFO))
+
+    esh = logging.StreamHandler(stream=sys.stderr)
+    esh.setFormatter(BASICFORMATTER)
+    esh.setLevel(logging.WARN)
+
+    slog.addHandler(osh)
+    slog.addHandler(esh)
+    slog.setLevel(logging.INFO)
+
+
+def setup_info_logging_file(debug, basename):
+    """ Setup info logging file.
 
         Parameters
         ----------
@@ -50,20 +69,7 @@ def setup_logging_files(debug, basename):
         log_max_level = logging.WARN
         formatter = DEBUGFORMATTER
 
-    # Logging to console
-    osh = logging.StreamHandler(stream=sys.stdout)
-    osh.setFormatter(BASICFORMATTER)
-    osh.setLevel(logging.INFO)
-    osh.addFilter(LessThanFilter(logging.INFO))
-
-    esh = logging.StreamHandler(stream=sys.stderr)
-    esh.setFormatter(BASICFORMATTER)
-    esh.setLevel(logging.WARN)
-    slog.addHandler(osh)
-    slog.addHandler(esh)
-    slog.setLevel(logging.INFO)
-
-    # Logging to files (they will be overwritten each time the program starts)
+    # Logging to file (it will be overwritten each time the program starts)
     # LOG file will be created only if there are request
     # to write messages into it
     ofh = logging.FileHandler(filename=f"{basename}.{Ext.GMR}.{Ext.LOG}",
@@ -71,16 +77,30 @@ def setup_logging_files(debug, basename):
     ofh.setFormatter(formatter)
     ofh.setLevel(log_min_level)
     ofh.addFilter(LessThanFilter(log_max_level))
-    flog.addHandler(ofh)
 
+    flog.addHandler(ofh)
+    flog.setLevel(logging.DEBUG)
+
+    return ofh
+
+
+def setup_error_logging_file(basename):
+    """ Setup error logging file.
+
+        Parameters
+        ----------
+        debug : int
+        basename: str
+            Input file name
+    """
+
+    # Logging to file (it will be overwritten each time the program starts)
     # ERR file has to be always present
     efh = logging.FileHandler(filename=f"{basename}.{Ext.GMR}.{Ext.ERR}",
                               mode='w', delay=False, encoding=Enc.UTF8)
     efh.setFormatter(DEBUGFORMATTER)
-    efh.setLevel(logging.ERROR)
+    efh.setLevel(logging.WARNING)
     flog.addHandler(efh)
-
-    flog.setLevel(logging.DEBUG)
 
 
 class StatisticsData(object):
